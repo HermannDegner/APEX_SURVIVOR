@@ -1,0 +1,291 @@
+# デバッグモード（Trueで詳細なログ出力）
+debug: false
+
+game_rules:
+  min_choice: 1
+  max_choice: 10
+  starting_score: 100
+  starting_hp: 4  # 5 → 3 → 4 (バランス調整)
+  crash_hp_loss: 1
+  hp_purchase_cost: 20
+  max_hp: 4  # 5 → 3 → 4 (バランス調整)
+  crash_probabilities:
+    1: 0.02   # 3% → 2% (さらに安全に)
+    2: 0.05   # 6% → 5%
+    3: 0.08   # 10% → 8%
+    4: 0.12   # 15% → 12%
+    5: 0.16   # 20% → 16%
+    6: 0.25   # 30% → 25%
+    7: 0.35   # 40% → 35%
+    8: 0.45   # 50% → 45%
+    9: 0.55   # 60% → 55%
+    10: 0.65  # 70% → 65%
+  crash_penalty_multiplier: -2.0
+  success_bonuses:
+    1: 1
+    2: 3
+    3: 5
+    4: 7
+    5: 9
+    6: 12
+    7: 14
+    8: 18
+    9: 25
+    10: 30
+tournament:
+  sets: 5
+  rounds: 5
+  # セットごとの順位ボーナス（トータルスコアに加算）
+  # 1位のみにボーナス付与（勝者総取り的な構造）
+  set_rank_bonus:
+    1: 30   # 1位: +30pts (¥3億円) - 勝者のみ
+    2: 0    # 2位以下: ボーナスなし
+    3: 0
+    4: 0
+    5: 0
+  final_round:
+    finality_weight: 3.0
+    desperation_bonus: 2.0
+  environment_shifts:
+    enabled: true
+    ai_voting: true  # AIによる環境選択の投票
+    # 各セットごとの環境タイプ (normal, safe, mild, volatile, moderate, deadly)
+    # ai_voting: trueの場合、これはデフォルト値として使用
+    environments:
+      1: "safe"      # SET 1: 安全（生存率高く）
+      2: "safe"      # SET 2: 安全（まだ余裕）
+      3: "normal"    # SET 3: 通常（徐々に厳しく）
+      4: "normal"    # SET 4: 通常（淘汰はするが全滅は避ける）
+      5: "mild"      # SET 5: やや危険（最終決戦）
+    modifiers:
+      safe:
+        description: "安全地帯 - リスク-40%"
+        risk_multiplier: 0.6
+        bonus_multiplier: 0.75
+      normal:
+        description: "通常環境 - リスク-15%"
+        risk_multiplier: 0.85
+        bonus_multiplier: 0.90
+      mild:
+        description: "やや危険 - リスク±0%"
+        risk_multiplier: 1.0
+        bonus_multiplier: 1.10
+      moderate:
+        description: "中程度の危険 - リスク+15%"
+        risk_multiplier: 1.15
+        bonus_multiplier: 1.30
+      volatile:
+        description: "不安定 - ランダム変動"
+        risk_multiplier: [0.85, 1.15]
+        bonus_multiplier: [1.0, 1.4]
+      deadly:
+        description: "危険地帯 - リスク+30%"
+        risk_multiplier: 1.3
+        bonus_multiplier: 1.8
+players:
+- name: 太郎
+  personality: 攻撃的
+  color: cyan
+  strategy: ssd
+  personality_weights:
+    low_risk: 0.8
+    medium_risk: 1.0
+    high_risk: 1.5
+  opponent_analysis: false
+  ssd_params:
+    kappa: 0.35
+    E_threshold: 1.5
+    T_base: 0.8
+- name: スミス
+  personality: バランス型
+  color: green
+  strategy: ssd
+  personality_weights:
+    low_risk: 1.0
+    medium_risk: 1.2
+    high_risk: 1.0
+  opponent_analysis: true
+  ssd_params:
+    kappa: 0.55
+    E_threshold: 2.0
+    T_base: 0.6
+- name: リン
+  personality: ギャンブラー
+  color: yellow
+  strategy: ssd
+  personality_weights:
+    low_risk: 0.5
+    medium_risk: 0.8
+    high_risk: 2.0
+  opponent_analysis: false
+  ssd_params:
+    kappa: 0.25
+    E_threshold: 1.2
+    T_base: 1.0
+- name: ナッシュ
+  personality: 均衡型
+  color: white
+  strategy: ssd
+  personality_weights:
+    low_risk: 0.3
+    medium_risk: 1.1
+    high_risk: 2.0
+  opponent_analysis: false
+  nash_equilibrium: true
+  ssd_params:
+    kappa: 0.7
+    E_threshold: 2.0
+    T_base: 0.5
+- name: メタ
+  personality: 適応型
+  color: blue
+  strategy: ssd
+  personality_weights:
+    low_risk: 0.9
+    medium_risk: 1.1
+    high_risk: 1.4
+  opponent_analysis: true
+  band_aware: true
+  ssd_params:
+    kappa: 0.38
+    E_threshold: 1.6
+    T_base: 0.75
+- name: ガード
+  personality: HP重視
+  color: gray
+  strategy: rule
+  rule_name: hp_guard
+  personality_weights:
+    low_risk: 1.0
+    medium_risk: 1.0
+    high_risk: 1.0
+  ssd_params:
+    kappa: 0.5
+    E_threshold: 2.0
+    T_base: 0.5
+- name: コピー
+  personality: 追従型
+  color: magenta
+  strategy: rule
+  rule_name: copycat_plus1
+  personality_weights:
+    low_risk: 1.0
+    medium_risk: 1.0
+    high_risk: 1.0
+  ssd_params:
+    kappa: 0.5
+    E_threshold: 2.0
+    T_base: 0.5
+ssd_theory:
+  meaning_pressure:
+    base_weight: 1.0
+    round_progression_weight: 0.5
+    score_gap_weight: 1.5
+  learning:
+    kappa_adjustment_rate: 0.02
+    E_accumulation_rate: 0.3
+    T_cooling_rate: 0.95
+  semantic_jump:
+    enabled: true
+    threshold_multiplier: 1.5
+    jump_probability: 0.5
+    jump_high_range:
+    - 8
+    - 10
+    jump_low_range:
+    - 1
+    - 3
+opponent_analysis:
+  enabled: true
+  min_history_length: 3
+  recent_weight: 1.5
+  final_round_weight: 2.0
+  aggressive_threshold: 7.5
+  conservative_threshold: 4.0
+nash_strategy:
+  distribution:
+    1: 0.022
+    2: 0.024
+    3: 0.028
+    4: 0.035
+    5: 0.046
+    6: 0.068
+    7: 0.11
+    8: 0.278
+    9: 0.17
+    10: 0.219
+comments:
+  probability: 1.0
+  choice_comments:
+    low_risk:
+    - 安全策でいくか
+    - 堅実に攻めよう
+    - リスクは避けておく
+    - 確実な道を選ぶ
+    medium_risk:
+    - まあ、このくらいかな
+    - バランスを取ろう
+    - 中間が無難だろう
+    - ほどほどにしておく
+    high_risk:
+    - 勝負に出るぞ！
+    - リスクを取る時だ
+    - ここは攻めだ
+    - チャンスを掴む！
+    extreme_risk:
+    - 全てを賭ける！
+    - 最大リスク、最大リターンだ！
+    - 勝負の時だ！
+    - 覚悟を決めた！
+    desperate:
+    - もう後がない...！
+    - 逆転するしかない！
+    - 全てを賭けるしかない！
+    - ここで決める！
+    death_pressure:
+    - 生き残らなければ...！
+    - 死ぬわけにはいかない...！
+    - HPが...慎重にいこう
+    - まだ死ねない...！
+    money_pressure:
+    - この賞金を失いたくない...！
+    - せっかく稼いだのに...！
+    - ここで失うわけにはいかない！
+    - 億単位の金が...！
+    debt_pressure:
+    - 負債を返さなければ...！
+    - マイナスから這い上がる！
+    - 借金地獄から脱出だ！
+    - 逆転しなければ終わりだ！
+    nash:
+    - HP状態から最適解を算出
+    - 期待値を最大化する
+    - 理論通りに行く
+    - 動的均衡戦略だ
+    - HP考慮型の最適選択
+  success_comments:
+    normal:
+    - ✨ よし、成功だ
+    - ✨ うまくいった
+    - ✨ 計算通りだ
+    high_risk:
+    - 🎉 やったぞ！
+    - 🎉 賭けに勝った！
+    - 🎉 リスクが報われた！
+    extreme_risk:
+    - 🔥 完璧だ！！
+    - 🔥 大成功だ！！
+    - 🔥 これが勝負師だ！！
+  crash_comments:
+  - 💥 くそっ、やられた...
+  - 💥 失敗だ...
+  - 💥 読み違えた...
+  - 💥 運がなかった...
+  victory_comments:
+  - 🏆 勝利だ！
+  - 🏆 トップを取った！
+  - 🏆 やったぞ！
+  defeat_comments:
+  - 😢 負けてしまった...
+  - 😢 届かなかった...
+  - 😢 次こそは...
