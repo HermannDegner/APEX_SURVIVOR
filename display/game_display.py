@@ -303,3 +303,4 @@ class GameDisplay:
                   f"(総合{overall_rank}位: {overall_score}pts {gap_text})")
         
         print()
+
