@@ -6,7 +6,7 @@
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 **デスゲーム型心理戦シミュレーター**  
-SSD理論（Semantic State Dynamics）を用いた高度なAI意思決定システム
+[SSD理論（Structural Subjectivity Dynamics）](https://github.com/HermannDegner/Structural-Subjectivity-Dynamics)を用いた高度なAI意思決定システム
 
 ---
 
@@ -52,8 +52,10 @@ SSD理論（Semantic State Dynamics）を用いた高度なAI意思決定シス�
 
 ## 🧠 SSD理論による意思決定
 
-### Semantic State Dynamics (意味状態力学)
-AIの内部状態を「意味圧」として数値化し、動的に戦略を調整
+### Structural Subjectivity Dynamics（構造的主観性力学）
+AIの内部状態を「意味圧（semantic pressure）」として数値化し、動的に戦略を調整
+
+詳細は [SSD理論リポジトリ](https://github.com/HermannDegner/Structural-Subjectivity-Dynamics) を参照
 
 #### 主要パラメータ
 ```python
