@@ -67,14 +67,10 @@ class ChickenPlayer:
         
         # PlayerState（ゲーム状態の管理）
         # ※ SSDStateはssd_coreで管理、PlayerStateはゲーム固有の状態
-        initial_kappa = {s: kappa for s in self.strategies.keys()}
         self.state = PlayerState(
             name=name,
             color=color,
             personality=personality,
-            kappa=initial_kappa,  # 互換性のため残す
-            E=ssd_cfg['learning'].get('E_initial', 0.0),
-            T=T_base,
             hp=starting_hp,
             score=starting_score,
             total_score=starting_score
@@ -673,7 +669,7 @@ class ChickenPlayer:
             else:
                 comment = random.choice(comments['desperate'])
         # 意味圧が極めて高い場合（大差で負けている時）
-        elif self.state.E > self.jump_threshold * 2.0:
+        elif self.ssd_state.E > self.jump_threshold * 2.0:
             comment = random.choice(comments['desperate'])
         # ナッシュ均衡型は専用コメント
         elif self.nash_equilibrium_enabled:
@@ -844,11 +840,11 @@ class ChickenPlayer:
         # SSD AIの場合
         # 【STEP 1】戦略の選択
         chosen_strategy = self._choose_strategy(meaning_pressure, alive_count)
-        self.state.last_strategy = chosen_strategy
         
         # 【STEP 2】SSDStrategyで選択肢の確率分布を計算
         choice_probabilities = self.ssd_strategy.make_choice(
             state=self.state,
+            ssd_state=self.ssd_state,
             meaning_pressure=meaning_pressure,
             chosen_strategy=chosen_strategy
         )
@@ -872,9 +868,8 @@ class ChickenPlayer:
             pressure_thresholds={'high': 5.0, 'medium': 3.0, 'low': 1.5}
         )
         
-        # SSDStateとPlayerStateを同期
+        # SSDStateを更新
         self.ssd_state.last_strategy = strategy
-        self.state.last_strategy = strategy
         
         return strategy
 
@@ -893,11 +888,6 @@ class ChickenPlayer:
         
         self.ssd_core.update(self.ssd_state, score_change, learning_modifiers)
         
-        # PlayerStateも同期（互換性のため）
-        self.state.kappa = self.ssd_state.kappa.copy()
-        self.state.E = self.ssd_state.E
-        self.state.T = self.ssd_state.T
-        self.state.jump_count = self.ssd_state.jump_count
     
     def _update_temperature(self):
         """温度を更新（SSDCoreに委譲）"""
@@ -989,7 +979,7 @@ class ChickenPlayer:
         purchase_coherence = total_pressure  # 圧力が高いほど購入は整合的
         
         # κ（整合性閾値）の平均値を使用
-        avg_kappa = np.mean(list(self.state.kappa.values())) if self.state.kappa else 0.5
+        avg_kappa = np.mean(list(self.ssd_state.kappa.values())) if self.ssd_state.kappa else 0.5
 
         # κ（整合性閾値）より高ければ購入が妥当
         if purchase_coherence < avg_kappa:
@@ -1113,7 +1103,7 @@ class ChickenPlayer:
         resource_pressure = 1.0 - resource_ratio
         
         # === 個性による重み付け（SSD理論） ===
-        avg_kappa = np.mean(list(self.state.kappa.values())) if self.state.kappa else 0.5
+        avg_kappa = np.mean(list(self.ssd_state.kappa.values())) if self.ssd_state.kappa else 0.5
         
         # κ（カッパ）による個性反映
         # κ低い（保守的） → 生存圧力を重視
@@ -1123,7 +1113,7 @@ class ChickenPlayer:
         
         # E（エネルギー）による活性度
         # E高い → 積極的にHP購入（行動意欲）
-        energy_factor = min(self.state.E, 1.0)  # 0.0～1.0
+        energy_factor = min(self.ssd_state.E, 1.0)  # 0.0～1.0
         
         # 総合意味圧の計算（個性反映）
         total_meaning_pressure = (
@@ -1162,3 +1152,4 @@ class ChickenPlayer:
 class ChickenGame:
     """チキンゲームのメインクラス"""
     
+

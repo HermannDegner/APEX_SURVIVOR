@@ -23,19 +23,21 @@ class SSDStrategy:
         self._safe_set: Set[int] = set()
         self._push_set: Set[int] = set()
     
-    def make_choice(self, state, meaning_pressure: float, chosen_strategy: str = None) -> List[float]:
+    def make_choice(self, state, ssd_state, meaning_pressure: float, chosen_strategy: str = None) -> List[float]:
         """
         意味圧と状態に基づいて選択の確率分布を返す
         
         Args:
-            state: プレイヤーの状態オブジェクト
+            state: プレイヤーの状態オブジェクト (PlayerState)
+            ssd_state: SSD状態オブジェクト (SSDState)
             meaning_pressure: 意味圧の値
             chosen_strategy: 選択された戦略（未使用だが互換性のため残す）
             
         Returns:
             選択確率の配列 (10要素)
         """
-        self.state = state  # 一時的に保存
+        self.state = state  # 一時的に保存 (PlayerState)
+        self.ssd_state = ssd_state  # SSD状態
         
         # 確率分布を計算
         probabilities = self._calculate_choice_probabilities(meaning_pressure)
@@ -68,7 +70,7 @@ class SSDStrategy:
             self._calibrate_bands()
         
         # 温度と意味圧による確率調整
-        T_adjusted = self.state.T * (1 + meaning_pressure * 0.3)
+        T_adjusted = self.ssd_state.T * (1 + meaning_pressure * 0.3)
         
         # 過去の成功パターンから学習
         choice_scores = [1.0] * 10  # 1-10の基本スコア

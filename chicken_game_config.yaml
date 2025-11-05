@@ -155,27 +155,11 @@ players:
   color: gray
   strategy: rule
   rule_name: hp_guard
-  personality_weights:
-    low_risk: 1.0
-    medium_risk: 1.0
-    high_risk: 1.0
-  ssd_params:
-    kappa: 0.5
-    E_threshold: 2.0
-    T_base: 0.5
 - name: コピー
   personality: 追従型
   color: magenta
   strategy: rule
   rule_name: copycat_plus1
-  personality_weights:
-    low_risk: 1.0
-    medium_risk: 1.0
-    high_risk: 1.0
-  ssd_params:
-    kappa: 0.5
-    E_threshold: 2.0
-    T_base: 0.5
 ssd_theory:
   meaning_pressure:
     base_weight: 1.0
@@ -289,3 +273,4 @@ comments:
   - 😢 負けてしまった...
   - 😢 届かなかった...
   - 😢 次こそは...
+

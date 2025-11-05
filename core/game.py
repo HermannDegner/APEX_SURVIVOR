@@ -46,14 +46,17 @@ class ChickenGame:
     def _initialize_players(self):
         """プレイヤーを初期化"""
         for p_config in self.config['players']:
+            # SSDパラメータ（ルールベース戦略の場合はデフォルト値を使用）
+            ssd_params = p_config.get('ssd_params', {'kappa': 0.3, 'E_threshold': 2.0, 'T_base': 0.8})
+            
             player = ChickenPlayer(
                 name=p_config['name'],
                 personality=p_config['personality'],
                 color=p_config['color'],
-                kappa=p_config['ssd_params']['kappa'],
-                E_threshold=p_config['ssd_params']['E_threshold'],
-                T_base=p_config['ssd_params']['T_base'],
-                personality_weights=p_config['personality_weights'],
+                kappa=ssd_params['kappa'],
+                E_threshold=ssd_params['E_threshold'],
+                T_base=ssd_params['T_base'],
+                personality_weights=p_config.get('personality_weights', {'low_risk': 1.0, 'medium_risk': 1.0, 'high_risk': 1.0}),
                 opponent_analysis=p_config.get('opponent_analysis', False),
                 nash_equilibrium=p_config.get('nash_equilibrium', False),
                 config=self.config,
@@ -189,10 +192,10 @@ class ChickenGame:
                     # === SSD理論による個性スコア計算 ===
                     
                     # 1. κ（整合性閾値）の影響
-                    avg_kappa = np.mean(list(player.state.kappa.values())) if player.state.kappa else 0.5
+                    avg_kappa = np.mean(list(player.ssd_state.kappa.values())) if player.ssd_state.kappa else 0.5
                     
                     # 2. E（未処理圧力）の影響
-                    energy = min(player.state.E, 1.0)
+                    energy = min(player.ssd_state.E, 1.0)
                     
                     # 3. 性格タイプによる重み
                     personality_weights = {
@@ -282,8 +285,8 @@ class ChickenGame:
         final_set_multiplier = 2.0 if remaining == 1 else 1.0
         
         # === 個性による重み付け（SSD理論） ===
-        avg_kappa = np.mean(list(player.state.kappa.values())) if player.state.kappa else 0.5
-        energy = min(player.state.E, 1.0)
+        avg_kappa = np.mean(list(player.ssd_state.kappa.values())) if player.ssd_state.kappa else 0.5
+        energy = min(player.ssd_state.E, 1.0)
         
         # κ（カッパ）による個性
         # κ低い（保守的） → 安全志向
@@ -327,7 +330,7 @@ class ChickenGame:
                                         choice: str, hp: int) -> str:
         """環境選択の理由を生成（SSD理論ベース）"""
         # 個性を反映
-        avg_kappa = np.mean(list(player.state.kappa.values())) if player.state.kappa else 0.5
+        avg_kappa = np.mean(list(player.ssd_state.kappa.values())) if player.ssd_state.kappa else 0.5
         
         # 基本状況の説明
         if rank == 1:
@@ -908,8 +911,8 @@ class ChickenGame:
             
             print(f"{color_name}{player.state.name}{Colors.RESET}: HP={player.state.hp}, TotalScore={player.state.total_score}pts{rank_info}", end="")
             if player.is_ai:
-                avg_kappa = np.mean(list(player.state.kappa.values())) if player.state.kappa else 0
-                print(f" {Colors.GRAY}[κ_avg={avg_kappa:.2f}, E={player.state.E:.2f}]{Colors.RESET}")
+                avg_kappa = np.mean(list(player.ssd_state.kappa.values())) if player.ssd_state.kappa else 0
+                print(f" {Colors.GRAY}[κ_avg={avg_kappa:.2f}, E={player.ssd_state.E:.2f}]{Colors.RESET}")
             else:
                 print()
 
